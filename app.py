@@ -100,7 +100,7 @@ Return ONLY the image description in English that can be used for DALL·E 3.
     # 우측 결과 출력창
 with right_col:
     if "dalle_prompt" in st.session_state:
-        st.markdown("### 📝 생성된 영어 프롬프트")
+        st.markdown("### 📝 생성된 프롬프트")
         st.code(st.session_state["dalle_prompt"])
 
         image_submit = st.button("🎨 이미지 생성하기")
