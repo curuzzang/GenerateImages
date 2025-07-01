@@ -5,7 +5,7 @@ from openai import OpenAI
 
 # 초기 설정
 st.set_page_config(page_title="나의 그림상자 (Assistant API)", layout="wide")
-st.title("🖼️ 나의 그림상자 - AI와 함께 콜라주 만들기")
+st.title("🖼️ 나의 그림상자 - My AI Drawing-Box")
 
 # OpenAI 클라이언트 객체 생성
 client = OpenAI(api_key=st.secrets["api_key"])
