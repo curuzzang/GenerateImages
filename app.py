@@ -5,7 +5,7 @@ from openai import OpenAI
 
 # 초기 설정
 st.set_page_config(page_title="나의 그림상자 (Assistant API)", layout="wide")
-st.title("🖼️ 나의 그림상자 - AI와 함께 콜라주 만들기")
+st.title("🖼️ 나의 그림상자 - AI Drawing Box")
 
 # OpenAI 클라이언트 객체 생성
 client = OpenAI(api_key=st.secrets["api_key"])
@@ -41,7 +41,7 @@ left_col, right_col = st.columns([1, 2])
 
 # 좌측 입력창
 with left_col:
-    st.subheader("🎨 주제를 입력하고 직접 고르거나 AI 추천을 받아보세요")
+    st.subheader("🎨주제를 입력하고 직접 고르거나 AI 추천을 받아보세요")
 
     with st.form("input_form"):
         theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
