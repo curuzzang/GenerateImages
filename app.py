@@ -47,10 +47,10 @@ with left_col:
         theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
         use_ai = st.checkbox("✨ AI가 시각 요소 자동 추천", value=True)
 
-        style = st.selectbox("🎨 스타일", options["style"], index=0 if "style" not in st.session_state else options["style"].index(st.session_state["style"]))
-        tone = st.selectbox("🎨 색상 톤", options["tone"], index=0 if "tone" not in st.session_state else options["tone"].index(st.session_state["tone"]))
-        mood = st.multiselect("💫 감정 / 분위기", options["mood"], default=st.session_state.get("mood", ["몽환적"]))
-        viewpoint = st.selectbox("📷 시점 / 구도", options["viewpoint"], index=0 if "viewpoint" not in st.session_state else options["viewpoint"].index(st.session_state["viewpoint"]))
+        style = st.selectbox("🎨 스타일", options["style"])
+        tone = st.selectbox("🎨 색상 톤", options["tone"])
+        mood = st.multiselect("💫 감정 / 분위기", options["mood"], default=["몽환적"])
+        viewpoint = st.selectbox("📷 시점 / 구도", options["viewpoint"])
 
         prompt_submit = st.form_submit_button("🎨 프롬프트 생성")
 
