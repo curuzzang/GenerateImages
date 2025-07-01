@@ -14,15 +14,14 @@ client = OpenAI(api_key=st.secrets["api_key"])
 def get_options():
     return {
         "style": [
-            "하이퍼리얼리즘", "인상주의", "초현실주의", "모더니즘", "팝 아트",
-            "수채화", "유화", "카툰", "픽셀 아트", "3D 렌더링",
-            "사이버펑크", "스케치풍", "클림트 스타일", "큐비즘", "사진 같은 리얼리즘",
-            "아르누보", "낙서풍 (Doodle)"
+            "수채화", "유화", "카툰", "픽셀 아트", "3D 렌더링", "사이버펑크", "스케치풍",
+            "클림트 스타일", "큐비즘", "사진 같은 리얼리즘", "아르누보", "낙서풍 (Doodle)",
+            "하이퍼리얼리즘", "인상주의", "모더니즘", "팝아트", "추상화", "디지털 아트", "콜라주 아트"
         ],
         "tone": [
-            "따뜻한 파스텔톤", "선명한 원색", "몽환적 퍼플", "차가운 블루",
-            "빈티지 세피아", "형광 네온", "모노톤 (흑백)", "대비 강한 컬러",
-            "브라운 계열", "연보라+회색", "다채로운 무지개", "연한 베이지", "청록+골드"
+            "따뜻한 파스텔톤", "선명한 원색", "몽환적 퍼플", "차가운 블루", "빈티지 세피아", "형광 네온",
+            "모노톤 (흑백)", "대비 강한 컬러", "브라운 계열", "연보라+회색", "다채로운 무지개",
+            "연한 베이지", "청록+골드"
         ],
         "mood": [
             "몽환적", "고요함", "희망", "슬픔", "그리움", "설렘", "불안정함", "자유로움",
@@ -35,13 +34,17 @@ def get_options():
         ]
     }
 
+# 번역 함수
 def translate_to_prompt(style, tone, mood, viewpoint):
     style_dict = {
-        "하이퍼리얼리즘": "hyperrealism", "인상주의": "impressionism", "초현실주의": "surrealism",
-        "모더니즘": "modernism", "팝 아트": "pop art", "수채화": "watercolor", "유화": "oil painting",
-        "카툰": "cartoon", "픽셀 아트": "pixel art", "3D 렌더링": "3D rendering", "사이버펑크": "cyberpunk",
-        "스케치풍": "sketch style", "클림트 스타일": "Klimt style", "큐비즘": "cubism",
-        "사진 같은 리얼리즘": "photorealism", "아르누보": "art nouveau", "낙서풍 (Doodle)": "doodle style"
+        "수채화": "watercolor", "유화": "oil painting", "카툰": "cartoon", "픽셀 아트": "pixel art",
+        "3D 렌더링": "3D rendering", "사이버펑크": "cyberpunk", "스케치풍": "sketch style",
+        "클림트 스타일": "in the style of Gustav Klimt", "큐비즘": "cubist style",
+        "사진 같은 리얼리즘": "photorealistic style", "아르누보": "art nouveau",
+        "낙서풍 (Doodle)": "doodle art", "하이퍼리얼리즘": "hyperrealism",
+        "인상주의": "impressionist painting", "모더니즘": "modernist style",
+        "팝아트": "pop art", "추상화": "abstract art", "디지털 아트": "digital illustration",
+        "콜라주 아트": "collage artwork"
     }
     tone_dict = {
         "따뜻한 파스텔톤": "warm pastel tones", "선명한 원색": "vivid primary colors",
@@ -67,3 +70,107 @@ def translate_to_prompt(style, tone, mood, viewpoint):
     mood_eng = ", ".join([mood_dict.get(m, m) for m in mood]) if isinstance(mood, list) else mood_dict.get(mood, mood)
     viewpoint_eng = viewpoint_dict.get(viewpoint, viewpoint)
     return style_eng, tone_eng, mood_eng, viewpoint_eng
+
+# 옵션 불러오기
+options = get_options()
+left_col, right_col = st.columns([1, 2])
+
+with left_col:
+    st.subheader("🎨 주제를 입력하고 직접 고르거나 AI 추천을 받아보세요")
+    with st.form("input_form"):
+        theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
+        use_ai = st.checkbox("✨ AI가 시각 요소 자동 추천", value=True)
+
+        style = st.selectbox("🎨 스타일", options["style"])
+        tone = st.selectbox("🎨 색상 톤", options["tone"])
+        mood = st.multiselect("💫 감정 / 분위기", options["mood"], default=["몽환적"])
+        viewpoint = st.selectbox("📷 시점 / 구도", options["viewpoint"])
+        submitted = st.form_submit_button("✨ 프롬프트 생성")
+
+    if submitted:
+        with st.spinner("프롬프트 생성 중..."):
+            try:
+                if use_ai:
+                    instruction = f"""
+You are a creative assistant. Based on the theme, suggest:
+Style, Color tone, Mood(s), Viewpoint (in Korean).
+Theme: {theme}
+Format:
+Style: ...
+Color tone: ...
+Mood: ...
+Viewpoint: ...
+"""
+                    ai_response = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[{"role": "user", "content": instruction}]
+                    )
+                    response_text = ai_response.choices[0].message.content.strip()
+                    for line in response_text.splitlines():
+                        if line.startswith("Style:"):
+                            style = line.split(":", 1)[1].strip()
+                        elif line.startswith("Color tone:"):
+                            tone = line.split(":", 1)[1].strip()
+                        elif line.startswith("Mood:"):
+                            mood = line.split(":", 1)[1].strip().split(",")
+                        elif line.startswith("Viewpoint:"):
+                            viewpoint = line.split(":", 1)[1].strip()
+
+                style_eng, tone_eng, mood_eng, viewpoint_eng = translate_to_prompt(style, tone, mood, viewpoint)
+
+                final_prompt = f"""
+Create a vivid English image prompt for DALL·E 3.
+Theme: {theme}
+Style: {style_eng}
+Color tone: {tone_eng}
+Mood: {mood_eng}
+Viewpoint: {viewpoint_eng}
+Only return the prompt.
+"""
+                prompt_response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": final_prompt}]
+                )
+                dalle_prompt = prompt_response.choices[0].message.content.strip()[:1000]
+                st.session_state["dalle_prompt"] = dalle_prompt
+                st.session_state["style"] = style
+                st.session_state["tone"] = tone
+                st.session_state["mood"] = mood
+                st.session_state["viewpoint"] = viewpoint
+                st.success("✅ 프롬프트 생성 완료!")
+            except Exception as e:
+                st.error(f"❌ 에러: {e}")
+
+with right_col:
+    if "dalle_prompt" in st.session_state:
+        st.markdown("### 📝 생성된 프롬프트")
+        st.code(st.session_state["dalle_prompt"])
+        st.markdown(f"**🎨 스타일**: {st.session_state['style']}")
+        st.markdown(f"**🎨 색감**: {st.session_state['tone']}")
+        st.markdown(f"**💫 감정/분위기**: {', '.join(st.session_state['mood'])}")
+        st.markdown(f"**📷 시점**: {st.session_state['viewpoint']}")
+
+        if st.button("🎨 이미지 생성하기"):
+            with st.spinner("이미지 생성 중..."):
+                try:
+                    image_response = client.images.generate(
+                        model="dall-e-2",
+                        prompt=st.session_state["dalle_prompt"],
+                        size="1024x1024",
+                        n=1
+                    )
+                    image_url = image_response.data[0].url
+                    st.session_state["image_url"] = image_url
+                    st.success("✅ 이미지 생성 완료!")
+                except Exception as e:
+                    st.error(f"❌ 에러: {e}")
+
+    if "image_url" in st.session_state:
+        st.image(st.session_state["image_url"], caption="🎉 생성된 이미지")
+        image_data = requests.get(st.session_state["image_url"]).content
+        st.download_button(
+            label="📥 이미지 다운로드",
+            data=BytesIO(image_data),
+            file_name="my_art_box.png",
+            mime="image/png"
+        )
