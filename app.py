@@ -5,7 +5,7 @@ from openai import OpenAI
 
 # 초기 설정
 st.set_page_config(page_title="나의 그림상자 (Assistant API)", layout="wide")
-st.title("🖼️ 나의 그림상자 - AI Drawing Box")
+st.title("🖼️ 나의 그림상자 - AI와 함께 콜라주 만들기")
 
 # OpenAI 클라이언트 객체 생성
 client = OpenAI(api_key=st.secrets["api_key"])
@@ -41,7 +41,7 @@ left_col, right_col = st.columns([1, 2])
 
 # 좌측 입력창
 with left_col:
-    st.subheader("🎨주제를 입력하고 직접 고르거나 AI 추천을 받아보세요")
+    st.subheader("🎨 주제를 입력하고 직접 고르거나 AI 추천을 받아보세요")
 
     with st.form("input_form"):
         theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
@@ -96,7 +96,7 @@ Only return the image description in English.
                     model="gpt-4o",
                     messages=[{"role": "user", "content": prompt_instruction}]
                 )
-                dalle_prompt = prompt_response.choices[0].message.content.strip()
+                dalle_prompt = prompt_response.choices[0].message.content.strip()[:1000]  # 프롬프트 길이 제한
                 st.session_state["dalle_prompt"] = dalle_prompt
                 st.session_state["style"] = style
                 st.session_state["tone"] = tone
@@ -123,7 +123,7 @@ with right_col:
                 try:
                     image_response = client.images.generate(
                         model="dall-e-2",
-                        prompt=st.session_state["dalle_prompt"],
+                        prompt=st.session_state["dalle_prompt"][:1000],
                         size="1024x1024",
                         n=1
                     )
