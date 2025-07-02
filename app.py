@@ -2,6 +2,21 @@ import streamlit as st
 import requests
 from io import BytesIO
 from openai import OpenAI
+from datetime import datetime
+import pytz
+import streamlit as st
+
+# ✅ 현재 시간 (KST)
+korea = pytz.timezone("Asia/Seoul")
+now = datetime.now(korea)
+
+# ✅ 마감 시각: 2025년 7월 2일 밤 11시 59분 59초
+cutoff_datetime = korea.localize(datetime(2025, 7, 2, 23, 59, 59))
+
+# ✅ 제한 조건
+if now > cutoff_datetime:
+    st.error("⛔ 이 앱은 2025년 7월 2일 밤 12시(KST)까지만 사용할 수 있습니다.")
+    st.stop()
 
 # 초기 설정
 st.set_page_config(page_title="나의 그림상자 (Assistant API)", layout="wide")
