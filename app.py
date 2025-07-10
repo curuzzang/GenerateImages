@@ -19,7 +19,7 @@ import streamlit as st
 #    st.stop()
 
 # 초기 설정
-st.set_page_config(page_title="나의 그림상자 (Assistant API)", layout="wide")
+st.set_page_config(page_title="나의 그림상자 (Drawing Assistant)", layout="wide")
 st.title("🖼️ 나의 그림상자 - My AI Drawing-Box")
 
 # OpenAI 클라이언트 객체 생성
