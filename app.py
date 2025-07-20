@@ -94,7 +94,7 @@ with left_col:
     st.subheader("🎨 주제를 입력하고 직접 고르거나 AI 추천을 받아보세요")
     with st.form("input_form"):
         theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
-        use_ai = st.checkbox("✨ AI가 시각 요소 자동 추천", value=True)
+        use_ai = st.checkbox(" AI가 시각 요소 자동 추천", value=True)
 
         style = st.selectbox("🎨 스타일", options["style"])
         tone = st.selectbox("🎨 색상 톤", options["tone"])
