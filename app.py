@@ -7,16 +7,16 @@ import pytz
 import streamlit as st
 
 # ✅ 현재 시간 (KST)
-#korea = pytz.timezone("Asia/Seoul")
-#now = datetime.now(korea)
+korea = pytz.timezone("Asia/Seoul")
+now = datetime.now(korea)
 
-# ✅ 마감 시각: 2025년 7월 2일 밤 11시 59분 59초
-#cutoff_datetime = korea.localize(datetime(2025, 7, 2, 23, 59, 59))
+# ✅ 마감 시각: 2025년 7월 21일 밤 11시 59분 59초
+cutoff_datetime = korea.localize(datetime(2025, 7, 2, 23, 59, 59))
 
 # ✅ 제한 조건
-# if now > cutoff_datetime:
-   # st.error("⛔ 앱 사용시간이 종료되었습니다! 감사합니다💕")
-   # st.stop()
+if now > cutoff_datetime:
+    st.error("⛔ 앱 사용시간이 종료되었습니다! 감사합니다💕")
+    st.stop()
 
 # 초기 설정
 st.set_page_config(page_title="나의 그림상자 (Drawing Assistant)", layout="wide")
@@ -169,7 +169,7 @@ with right_col:
             with st.spinner("이미지 생성 중..."):
                 try:
                     image_response = client.images.generate(
-                        model="dall-e-2",
+                        model="dall-e-3",
                         prompt=st.session_state["dalle_prompt"],
                         size="1024x1024",
                         n=1
