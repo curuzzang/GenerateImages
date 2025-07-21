@@ -11,7 +11,7 @@ korea = pytz.timezone("Asia/Seoul")
 now = datetime.now(korea)
 
 # ✅ 마감 시각: 2025년 7월 21일 밤 11시 59분 59초
-cutoff_datetime = korea.localize(datetime(2025, 7, 2, 23, 59, 59))
+cutoff_datetime = korea.localize(datetime(2025, 7, 21, 23, 59, 59))
 
 # ✅ 제한 조건
 if now > cutoff_datetime:
