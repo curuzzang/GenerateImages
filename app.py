@@ -14,7 +14,7 @@ now = datetime.now(korea)
 cutoff_datetime = korea.localize(datetime(2025, 7, 21, 23, 59, 59))
 
 # ✅ 제한 조건
-if now > cutoff_datetime:
+#if now > cutoff_datetime:
     st.error("⛔ 앱 사용시간이 종료되었습니다! 감사합니다💕")
     st.stop()
 
@@ -189,3 +189,4 @@ with right_col:
             file_name="my_art_box.png",
             mime="image/png"
         )
+
