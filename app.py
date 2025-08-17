@@ -10,7 +10,7 @@ import streamlit as st
 korea = pytz.timezone("Asia/Seoul")
 now = datetime.now(korea)
 
-# ✅ 마감 시각: 2025년 8월 11일 오후 3시 59분 59초
+# ✅ 마감 시각: 2025년 8월 18일 오후 3시 59분 59초
 cutoff_datetime = korea.localize(datetime(2025, 8, 11, 15, 59, 59))
 
 # ✅ 제한 조건
@@ -189,6 +189,7 @@ with right_col:
             file_name="my_art_box.png",
             mime="image/png"
         )
+
 
 
 
