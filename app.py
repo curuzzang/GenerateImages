@@ -19,6 +19,24 @@ if now > cutoff_datetime:
 
 # 초기 설정
 st.set_page_config(page_title="나의 그림상자 (Drawing Assistant)", layout="wide")
+# 스타일: 버튼 색상 정의 (CSS)
+st.markdown("""
+<style>
+button[data-baseweb="button"] {
+    background-color: #4C82FB !important;  /* 파란색 */
+    color: white !important;
+    border-radius: 8px !important;
+    border: 1px solid #4C82FB !important;
+    font-weight: bold !important;
+    transition: 0.3s ease;
+}
+button[data-baseweb="button"]:hover {
+    background-color: #2E5EEB !important;  /* hover 시 짙은 파랑 */
+    border-color: #2E5EEB !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 st.title("🖼️ 나의 그림상자 - My AI Drawing-Box")
 
 # OpenAI 클라이언트
@@ -34,7 +52,7 @@ def get_options():
             "혼합 매체", "사진+일러스트 혼합", "디지털 콜라주", "포토몽타주", "데콜라주"
         ],
         "tone": [
-            "자동 추천 (AI 선택)", "따뜻한 파스텔톤", "선명한 원색", "몽환적 퍼플", "차가운 블루", "빈티지 세피아",
+            "따뜻한 파스텔톤", "선명한 원색", "몽환적 퍼플", "차가운 블루", "빈티지 세피아",
             "형광 네온", "모노톤 (흑백)", "대비 강한 컬러", "브라운 계열", "연보라+회색",
             "다채로운 무지개", "연한 베이지", "청록+골드"
         ],
@@ -149,7 +167,7 @@ with left_col:
         with st.spinner("프롬프트 생성 중..."):
             try:
                 # 🔹 색상 톤 자동 추천 또는 전체 자동 추천
-                if tone == "자동 추천 (AI 선택)" or use_ai:
+                if tone == use_ai:
                     instruction = f"""
 You are a creative assistant. Based on the theme, suggest:
 Style, Color tone, Mood(s), and Viewpoint (in Korean).
@@ -246,5 +264,6 @@ with right_col:
                     st.success("✅ 이미지 생성 완료!")
                 except Exception as e:
                     st.error(f"❌ 에러: {e}")
+
 
 
