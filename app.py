@@ -6,7 +6,6 @@ from datetime import datetime
 import pytz
 from PIL import Image  # ⬅ 후처리(리사이즈/크롭)용
 
-st.markdown('<style>button[data-baseweb="button"]{background-color:#3DD9B0!important;color:white!important;font-weight:600!important;border-radius:8px!important;}</style>', unsafe_allow_html=True)
 
 # ✅ 현재 시간 (KST)
 korea = pytz.timezone("Asia/Seoul")
@@ -22,6 +21,29 @@ if now > cutoff_datetime:
 # 초기 설정
 st.set_page_config(page_title="나의 그림상자 (Drawing Assistant)", layout="wide")
 st.title("🖼️ 나의 그림상자 - My AI Drawing-Box")
+# 🎨 민트색 버튼 스타일 전역 적용
+st.markdown("""
+<style>
+div.stButton > button:first-child,
+div.stDownloadButton > button:first-child,
+div.stFormSubmitButton > button:first-child {
+    background-color: #3DD9B0 !important; /* 민트색 */
+    color: white !important;
+    font-weight: 700 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.6em 1.2em !important;
+    transition: all 0.2s ease-in-out !important;
+}
+div.stButton > button:hover,
+div.stDownloadButton > button:hover,
+div.stFormSubmitButton > button:hover {
+    background-color: #1DBB96 !important; /* 진한 민트 hover */
+    color: white !important;
+    transform: scale(1.02);
+}
+</style>
+""", unsafe_allow_html=True)
 
 # OpenAI 클라이언트
 client = OpenAI(api_key=st.secrets["api_key"])
@@ -248,6 +270,7 @@ with right_col:
                     st.success("✅ 이미지 생성 완료!")
                 except Exception as e:
                     st.error(f"❌ 에러: {e}")
+
 
 
 
