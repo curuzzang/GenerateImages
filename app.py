@@ -21,26 +21,27 @@ if now > cutoff_datetime:
 # 초기 설정
 st.set_page_config(page_title="나의 그림상자 (Drawing Assistant)", layout="wide")
 st.title("🖼️ 나의 그림상자 - My AI Drawing-Box")
-# 🎨 민트색 버튼 스타일 전역 적용
+# 🎨 버튼 색상 스타일 (연한 민트 + 굵은 글씨)
 st.markdown("""
 <style>
 div.stButton > button:first-child,
 div.stDownloadButton > button:first-child,
 div.stFormSubmitButton > button:first-child {
-    background-color: #3DD9B0 !important; /* 민트색 */
-    color: white !important;
-    font-weight: 700 !important;
+    background-color: #A8E6CF !important;  /* 🌿 연한 민트 */
+    color: #004D40 !important;              /* 어두운 청록 글자색 */
+    font-weight: 800 !important;            /* 글씨 굵게 */
     border: none !important;
-    border-radius: 8px !important;
+    border-radius: 10px !important;
     padding: 0.6em 1.2em !important;
-    transition: all 0.2s ease-in-out !important;
+    transition: all 0.25s ease-in-out !important;
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.1);
 }
 div.stButton > button:hover,
 div.stDownloadButton > button:hover,
 div.stFormSubmitButton > button:hover {
-    background-color: #1DBB96 !important; /* 진한 민트 hover */
-    color: white !important;
-    transform: scale(1.02);
+    background-color: #C8F7E6 !important;   /* 🩵 hover 시 더 밝은 민트 */
+    color: #00332C !important;
+    transform: scale(1.03);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -270,6 +271,7 @@ with right_col:
                     st.success("✅ 이미지 생성 완료!")
                 except Exception as e:
                     st.error(f"❌ 에러: {e}")
+
 
 
 
