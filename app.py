@@ -21,30 +21,34 @@ if now > cutoff_datetime:
 # 초기 설정
 st.set_page_config(page_title="나의 그림상자 (Drawing Assistant)", layout="wide")
 st.title("🖼️ 나의 그림상자 - My AI Drawing-Box")
-# 🎨 버튼 색상 스타일 (연한 민트 + 굵은 글씨)
+# 🎨 버튼 색상 스타일 (연한 민트 + 굵은 글씨 완전 적용)
 st.markdown("""
 <style>
 div.stButton > button:first-child,
 div.stDownloadButton > button:first-child,
 div.stFormSubmitButton > button:first-child {
-    background-color: #A8E6CF !important;  /* 🌿 연한 민트 */
-    color: #004D40 !important;              /* 어두운 청록 글자색 */
-    font-weight: 800 !important;            /* 글씨 굵게 */
+    background-color: #A8E6CF !important;   /* 🌿 연한 민트 */
+    color: #004D40 !important;               /* 어두운 청록 글씨 */
+    font-weight: 900 !important;             /* 매우 굵게 */
+    font-family: "Noto Sans KR", "Pretendard", sans-serif !important; /* 한글 폰트 지정 */
+    letter-spacing: -0.3px !important;       /* 자간 살짝 좁게 */
+    font-size: 1.05rem !important;           /* 살짝 크게 */
     border: none !important;
     border-radius: 10px !important;
     padding: 0.6em 1.2em !important;
     transition: all 0.25s ease-in-out !important;
-    box-shadow: 0px 3px 8px rgba(0,0,0,0.1);
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.08);
 }
 div.stButton > button:hover,
 div.stDownloadButton > button:hover,
 div.stFormSubmitButton > button:hover {
-    background-color: #C8F7E6 !important;   /* 🩵 hover 시 더 밝은 민트 */
-    color: #00332C !important;
+    background-color: #C8F7E6 !important;    /* 🩵 hover 시 더 밝은 민트 */
+    color: #002C25 !important;
     transform: scale(1.03);
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 # OpenAI 클라이언트
 client = OpenAI(api_key=st.secrets["api_key"])
@@ -271,6 +275,7 @@ with right_col:
                     st.success("✅ 이미지 생성 완료!")
                 except Exception as e:
                     st.error(f"❌ 에러: {e}")
+
 
 
 
