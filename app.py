@@ -12,7 +12,6 @@ now = datetime.now(korea)
 # ✅ 마감 시각: 2025년 10월 16일 오후 8시 59분 59초
 cutoff_datetime = korea.localize(datetime(2025, 10, 16, 20, 59, 59))
 
-# ✅ 제한 조건
 if now > cutoff_datetime:
     st.error("⛔ 앱 사용시간이 종료되었습니다! 감사합니다💕")
     st.stop()
@@ -21,10 +20,10 @@ if now > cutoff_datetime:
 st.set_page_config(page_title="나의 그림상자 (Drawing Assistant)", layout="wide")
 st.title("🖼️ 나의 그림상자 - My AI Drawing-Box")
 
-# OpenAI 클라이언트 객체 생성
+# OpenAI 클라이언트
 client = OpenAI(api_key=st.secrets["api_key"])
 
-# 선택 옵션 정의 (한글) — 스타일 20개로 정리
+# ✅ 선택 옵션
 def get_options():
     return {
         "style": [
@@ -34,9 +33,9 @@ def get_options():
             "혼합 매체", "사진+일러스트 혼합", "디지털 콜라주", "포토몽타주", "데콜라주"
         ],
         "tone": [
-            "따뜻한 파스텔톤", "선명한 원색", "몽환적 퍼플", "차가운 블루", "빈티지 세피아", "형광 네온",
-            "모노톤 (흑백)", "대비 강한 컬러", "브라운 계열", "연보라+회색", "다채로운 무지개",
-            "연한 베이지", "청록+골드"
+            "자동 추천 (AI 선택)", "따뜻한 파스텔톤", "선명한 원색", "몽환적 퍼플", "차가운 블루", "빈티지 세피아",
+            "형광 네온", "모노톤 (흑백)", "대비 강한 컬러", "브라운 계열", "연보라+회색",
+            "다채로운 무지개", "연한 베이지", "청록+골드"
         ],
         "mood": [
             "몽환적", "고요함", "희망", "슬픔", "그리움", "설렘", "불안정함", "자유로움",
@@ -46,10 +45,11 @@ def get_options():
         "viewpoint": [
             "정면", "항공 시점", "클로즈업", "광각", "역광",
             "뒷모습", "소프트 포커스", "하늘을 올려다보는 시점"
-        ]
+        ],
+        "image_size": ["1024x1024", "1024x760"]
     }
 
-# 번역 함수 — 스타일 20개 매핑 반영
+# ✅ 번역 함수
 def translate_to_prompt(style, tone, mood, viewpoint):
     style_dict = {
         "스티커 스타일": "sticker style",
@@ -101,13 +101,8 @@ def translate_to_prompt(style, tone, mood, viewpoint):
     viewpoint_eng = viewpoint_dict.get(viewpoint, viewpoint)
     return style_eng, tone_eng, mood_eng, viewpoint_eng
 
-# 옵션 불러오기
+# ✅ 인터페이스
 options = get_options()
-
-# 🔄 예전 세션 값 때문에 스타일이 목록에 없어서 에러나는 경우 방지
-if "style" in st.session_state and st.session_state["style"] not in options["style"]:
-    st.session_state.pop("style", None)
-
 left_col, right_col = st.columns([1, 2])
 
 with left_col:
@@ -120,15 +115,17 @@ with left_col:
         tone = st.selectbox("🎨 색상 톤", options["tone"])
         mood = st.multiselect("💫 감정 / 분위기", options["mood"], default=["몽환적"])
         viewpoint = st.selectbox("📷 시점 / 구도", options["viewpoint"])
+        image_size = st.selectbox("🖼️ 이미지 크기", options["image_size"])
         submitted = st.form_submit_button("✨ 프롬프트 생성")
 
     if submitted:
         with st.spinner("프롬프트 생성 중..."):
             try:
-                if use_ai:
+                # 🔹 색상 톤이 "자동 추천"일 경우, AI가 선택
+                if tone == "자동 추천 (AI 선택)" or use_ai:
                     instruction = f"""
 You are a creative assistant. Based on the theme, suggest:
-Style, Color tone, Mood(s), Viewpoint (in Korean).
+Style, Color tone, Mood(s), and Viewpoint (in Korean).
 Theme: {theme}
 Format:
 Style: ...
@@ -172,6 +169,7 @@ Only return the prompt.
                 st.session_state["tone"] = tone
                 st.session_state["mood"] = mood
                 st.session_state["viewpoint"] = viewpoint
+                st.session_state["image_size"] = image_size
                 st.success("✅ 프롬프트 생성 완료!")
             except Exception as e:
                 st.error(f"❌ 에러: {e}")
@@ -184,6 +182,7 @@ with right_col:
         st.markdown(f"**🎨 색감**: {st.session_state['tone']}")
         st.markdown(f"**💫 감정/분위기**: {', '.join(st.session_state['mood'])}")
         st.markdown(f"**📷 시점**: {st.session_state['viewpoint']}")
+        st.markdown(f"**🖼️ 이미지 크기**: {st.session_state['image_size']}")
 
         if st.button("🎨 이미지 생성하기"):
             with st.spinner("이미지 생성 중..."):
@@ -191,7 +190,7 @@ with right_col:
                     image_response = client.images.generate(
                         model="dall-e-3",
                         prompt=st.session_state["dalle_prompt"],
-                        size="1024x1024",
+                        size=st.session_state["image_size"],
                         n=1
                     )
                     image_url = image_response.data[0].url
@@ -209,7 +208,6 @@ with right_col:
             file_name="my_art_box.png",
             mime="image/png"
         )
-
 
 
 
