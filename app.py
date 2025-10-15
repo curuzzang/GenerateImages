@@ -10,7 +10,7 @@ from PIL import Image  # ⬅ 후처리(리사이즈/크롭)용
 korea = pytz.timezone("Asia/Seoul")
 now = datetime.now(korea)
 
-# ✅ 마감 시각: 2025년 10월 16일 오후 20시 59분 59초
+# ✅ 마감 시각: 2025년 10월 16일 오후 8시 59분 59초
 cutoff_datetime = korea.localize(datetime(2025, 10, 16, 20, 59, 59))
 
 if now > cutoff_datetime:
@@ -111,6 +111,166 @@ def center_crop_to(img: Image.Image, target_w: int, target_h: int) -> Image.Imag
 
     if src_ratio > target_ratio:
         # 원본이 더 가로로 넓음 → 가로를 잘라냄
-        new_w = int(h_
+        new_w = int(h * target_ratio)
+        left = (w - new_w) // 2
+        box = (left, 0, left + new_w, h)
+        img = img.crop(box)
+    else:
+        # 원본이 더 세로로 큼 → 세로를 잘라냄
+        new_h = int(w / target_ratio)
+        top = (h - new_h) // 2
+        box = (0, top, w, top + new_h)
+        img = img.crop(box)
 
+    return img.resize((target_w, target_h), Image.LANCZOS)
 
+# ✅ 인터페이스
+options = get_options()
+
+# 세션 기본값 초기화 (KeyError 방지)
+st.session_state.setdefault("image_size", options["image_size"][0])
+
+left_col, right_col = st.columns([1, 2])
+
+with left_col:
+    st.subheader("🎨 주제를 입력하고 직접 고르거나 AI 추천을 받아보세요")
+    with st.form("input_form"):
+        theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
+        use_ai = st.checkbox(" AI가 시각 요소 자동 추천", value=True)
+
+        style = st.selectbox("🎨 스타일", options["style"])
+        tone = st.selectbox("🎨 색상 톤", options["tone"])
+        mood = st.multiselect("💫 감정 / 분위기", options["mood"], default=["몽환적"])
+        viewpoint = st.selectbox("📷 시점 / 구도", options["viewpoint"])
+        image_size = st.selectbox("🖼️ 이미지 크기", options["image_size"], index=options["image_size"].index(st.session_state["image_size"]))
+        submitted = st.form_submit_button("✨ 프롬프트 생성")
+
+    if submitted:
+        with st.spinner("프롬프트 생성 중..."):
+            try:
+                # 🔹 색상 톤 자동 추천 또는 전체 자동 추천
+                if tone == "자동 추천 (AI 선택)" or use_ai:
+                    instruction = f"""
+You are a creative assistant. Based on the theme, suggest:
+Style, Color tone, Mood(s), and Viewpoint (in Korean).
+Theme: {theme}
+Format:
+Style: ...
+Color tone: ...
+Mood: ...
+Viewpoint: ...
+"""
+                    ai_response = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[{"role": "user", "content": instruction}]
+                    )
+                    response_text = ai_response.choices[0].message.content.strip()
+                    for line in response_text.splitlines():
+                        if line.startswith("Style:"):
+                            style = line.split(":", 1)[1].strip()
+                        elif line.startswith("Color tone:"):
+                            tone = line.split(":", 1)[1].strip()
+                        elif line.startswith("Mood:"):
+                            mood = [m.strip() for m in line.split(":", 1)[1].split(",")]
+                        elif line.startswith("Viewpoint:"):
+                            viewpoint = line.split(":", 1)[1].strip()
+
+                style_eng, tone_eng, mood_eng, viewpoint_eng = translate_to_prompt(style, tone, mood, viewpoint)
+
+                final_prompt = f"""
+Create a vivid English image prompt for DALL·E 3.
+Theme: {theme}
+Style: {style_eng}
+Color tone: {tone_eng}
+Mood: {mood_eng}
+Viewpoint: {viewpoint_eng}
+Only return the prompt.
+"""
+                prompt_response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": final_prompt}]
+                )
+                dalle_prompt = prompt_response.choices[0].message.content.strip()[:1000]
+
+                # 세션 저장
+                st.session_state["dalle_prompt"] = dalle_prompt
+                st.session_state["style"] = style
+                st.session_state["tone"] = tone
+                st.session_state["mood"] = mood
+                st.session_state["viewpoint"] = viewpoint
+                st.session_state["image_size"] = image_size
+
+                st.success("✅ 프롬프트 생성 완료!")
+            except Exception as e:
+                st.error(f"❌ 에러: {e}")
+
+with right_col:
+    if "dalle_prompt" in st.session_state:
+        st.markdown("### 📝 생성된 프롬프트")
+        st.code(st.session_state["dalle_prompt"])
+        st.markdown(f"**🎨 스타일**: {st.session_state.get('style', '-')}")
+        st.markdown(f"**🎨 색감**: {st.session_state.get('tone', '-')}")
+        st.markdown(f"**💫 감정/분위기**: {', '.join(st.session_state.get('mood', []))}")
+        st.markdown(f"**📷 시점**: {st.session_state.get('viewpoint', '-')}")
+        st.markdown(f"**🖼️ 이미지 크기**: {st.session_state.get('image_size', '-')}")
+
+        if st.button("🎨 이미지 생성하기"):
+            with st.spinner("이미지 생성 중..."):
+                try:
+                    target_size = st.session_state["image_size"]
+                    # DALL·E 3 허용 사이즈로 변환
+                    if target_size == "1024x1024":
+                        gen_size = "1024x1024"
+                        postprocess_to_1024x760 = False
+                    elif target_size == "1024x760":
+                        # 생성은 1024x1024 → 이후 1024x760으로 크롭
+                        gen_size = "1024x1024"
+                        postprocess_to_1024x760 = True
+                    else:
+                        gen_size = "1024x1024"
+                        postprocess_to_1024x760 = False
+
+                    image_response = client.images.generate(
+                        model="dall-e-3",
+                        prompt=st.session_state["dalle_prompt"],
+                        size=gen_size,
+                        n=1
+                    )
+                    image_url = image_response.data[0].url
+
+                    # 원본 이미지 바이트
+                    image_bytes = requests.get(image_url).content
+
+                    if postprocess_to_1024x760:
+                        # 중앙 크롭으로 1024x760 만들기
+                        img = Image.open(BytesIO(image_bytes)).convert("RGBA")
+                        img = center_crop_to(img, 1024, 760)
+                        buf = BytesIO()
+                        img.save(buf, format="PNG")
+                        buf.seek(0)
+                        st.image(buf, caption="🎉 생성된 이미지 (1024x760)")
+                        st.download_button(
+                            label="📥 이미지 다운로드 (1024x760)",
+                            data=buf.getvalue(),
+                            file_name="my_art_box_1024x760.png",
+                            mime="image/png"
+                        )
+                    else:
+                        st.image(image_bytes, caption="🎉 생성된 이미지 (1024x1024)")
+                        st.download_button(
+                            label="📥 이미지 다운로드 (1024x1024)",
+                            data=image_bytes,
+                            file_name="my_art_box_1024x1024.png",
+                            mime="image/png"
+                        )
+
+                    # URL도 세션에 저장(원본 접근 필요 시)
+                    st.session_state["image_url"] = image_url
+                    st.success("✅ 이미지 생성 완료!")
+                except Exception as e:
+                    st.error(f"❌ 에러: {e}")
+
+    # 기존 결과 표시 (선택)
+    if "image_url" in st.session_state and "dalle_prompt" in st.session_state:
+        st.markdown("##### 🔗 원본 이미지 URL")
+        st.write(st.session_state["image_url"])
