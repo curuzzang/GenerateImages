@@ -6,6 +6,8 @@ from datetime import datetime
 import pytz
 from PIL import Image  # ⬅ 후처리(리사이즈/크롭)용
 
+st.markdown('<style>button[data-baseweb="button"]{background-color:#3DD9B0!important;color:white!important;font-weight:600!important;border-radius:8px!important;}</style>', unsafe_allow_html=True)
+
 # ✅ 현재 시간 (KST)
 korea = pytz.timezone("Asia/Seoul")
 now = datetime.now(korea)
@@ -19,24 +21,6 @@ if now > cutoff_datetime:
 
 # 초기 설정
 st.set_page_config(page_title="나의 그림상자 (Drawing Assistant)", layout="wide")
-# 스타일: 버튼 색상 정의 (CSS)
-st.markdown("""
-<style>
-button[data-baseweb="button"] {
-    background-color: #4C82FB !important;  /* 파란색 */
-    color: white !important;
-    border-radius: 8px !important;
-    border: 1px solid #4C82FB !important;
-    font-weight: bold !important;
-    transition: 0.3s ease;
-}
-button[data-baseweb="button"]:hover {
-    background-color: #2E5EEB !important;  /* hover 시 짙은 파랑 */
-    border-color: #2E5EEB !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
 st.title("🖼️ 나의 그림상자 - My AI Drawing-Box")
 
 # OpenAI 클라이언트
@@ -264,6 +248,7 @@ with right_col:
                     st.success("✅ 이미지 생성 완료!")
                 except Exception as e:
                     st.error(f"❌ 에러: {e}")
+
 
 
 
