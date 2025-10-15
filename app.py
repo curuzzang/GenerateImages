@@ -10,7 +10,7 @@ import pytz
 # =========================
 korea = pytz.timezone("Asia/Seoul")
 now = datetime.now(korea)
-cutoff_datetime = korea.localize(datetime(2025, 8, 17, 15, 59, 59))
+cutoff_datetime = korea.localize(datetime(2025, 10, 16, 20, 59, 59))
 
 if now > cutoff_datetime:
     st.error("⛔ 앱 사용시간이 종료되었습니다! 감사합니다💕")
@@ -269,6 +269,7 @@ with right_col:
             mime="image/png",
             key="download_latest"  # rerun에도 안정적으로 유지
         )
+
 
 
 
