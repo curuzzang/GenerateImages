@@ -32,7 +32,7 @@ div.stFormSubmitButton > button:first-child {
     font-weight: 900 !important;             /* 매우 굵게 */
     font-family: "Noto Sans KR", "Pretendard", sans-serif !important; /* 한글 폰트 지정 */
     letter-spacing: -0.3px !important;       /* 자간 살짝 좁게 */
-    font-size: 1.05rem !important;           /* 살짝 크게 */
+    font-size: 1.5rem !important;           /* 살짝 크게 */
     border: none !important;
     border-radius: 10px !important;
     padding: 0.6em 1.2em !important;
@@ -275,6 +275,7 @@ with right_col:
                     st.success("✅ 이미지 생성 완료!")
                 except Exception as e:
                     st.error(f"❌ 에러: {e}")
+
 
 
 
