@@ -4,7 +4,6 @@ from io import BytesIO
 from openai import OpenAI
 from datetime import datetime
 import pytz
-import streamlit as st
 
 # ✅ 현재 시간 (KST)
 korea = pytz.timezone("Asia/Seoul")
@@ -25,13 +24,14 @@ st.title("🖼️ 나의 그림상자 - My AI Drawing-Box")
 # OpenAI 클라이언트 객체 생성
 client = OpenAI(api_key=st.secrets["api_key"])
 
-# 선택 옵션 정의 (한글)
+# 선택 옵션 정의 (한글) — 스타일 20개로 정리
 def get_options():
     return {
         "style": [
-            "수채화", "유화", "카툰", "픽셀 아트", "3D 렌더링", "사이버펑크", "스케치풍",
-            "클림트 스타일", "큐비즘", "사진 같은 리얼리즘", "아르누보", "낙서풍 (Doodle)",
-            "하이퍼리얼리즘", "인상주의", "모더니즘", "팝아트", "추상화", "디지털 아트", "콜라주 아트"
+            "스티커 스타일", "이모지 스타일", "수채화 스타일", "유화 스타일", "모네풍(인상파)",
+            "사진 스타일", "손그림(드로잉)", "크레용 스타일", "낙서(Doodle)", "팝아트 스타일",
+            "빈티지 포스터", "신문지 콜라주", "종이 질감 스타일", "색종이 오려붙이기", "패턴 배경 스타일",
+            "혼합 매체", "사진+일러스트 혼합", "디지털 콜라주", "포토몽타주", "데콜라주"
         ],
         "tone": [
             "따뜻한 파스텔톤", "선명한 원색", "몽환적 퍼플", "차가운 블루", "빈티지 세피아", "형광 네온",
@@ -49,25 +49,39 @@ def get_options():
         ]
     }
 
-# 번역 함수
+# 번역 함수 — 스타일 20개 매핑 반영
 def translate_to_prompt(style, tone, mood, viewpoint):
     style_dict = {
-        "수채화": "watercolor", "유화": "oil painting", "카툰": "cartoon", "픽셀 아트": "pixel art",
-        "3D 렌더링": "3D rendering", "사이버펑크": "cyberpunk", "스케치풍": "sketch style",
-        "클림트 스타일": "in the style of Gustav Klimt", "큐비즘": "cubist style",
-        "사진 같은 리얼리즘": "photorealistic style", "아르누보": "art nouveau",
-        "낙서풍 (Doodle)": "doodle art", "하이퍼리얼리즘": "hyperrealism",
-        "인상주의": "impressionist painting", "모더니즘": "modernist style",
-        "팝아트": "pop art", "추상화": "abstract art", "디지털 아트": "digital illustration",
-        "콜라주 아트": "collage artwork"
+        "스티커 스타일": "sticker style",
+        "이모지 스타일": "emoji style",
+        "수채화 스타일": "watercolor style",
+        "유화 스타일": "oil painting style",
+        "모네풍(인상파)": "Monet-inspired impressionist style",
+        "사진 스타일": "photorealistic photography style",
+        "손그림(드로잉)": "hand-drawn sketch style",
+        "크레용 스타일": "crayon drawing style",
+        "낙서(Doodle)": "doodle art style",
+        "팝아트 스타일": "pop art style",
+        "빈티지 포스터": "vintage poster style",
+        "신문지 콜라주": "newspaper clipping collage style",
+        "종이 질감 스타일": "paper texture style with torn edges",
+        "색종이 오려붙이기": "colored paper cut-out collage style",
+        "패턴 배경 스타일": "repeating pattern background style",
+        "혼합 매체": "mixed media style",
+        "사진+일러스트 혼합": "photo with hand-drawn illustration overlays",
+        "디지털 콜라주": "modern digital collage style",
+        "포토몽타주": "photomontage style",
+        "데콜라주": "décollage style with torn poster layers"
     }
+
     tone_dict = {
         "따뜻한 파스텔톤": "warm pastel tones", "선명한 원색": "vivid primary colors",
         "몽환적 퍼플": "dreamy purples", "차가운 블루": "cool blues", "빈티지 세피아": "vintage sepia",
-        "형광 네온": "neon tones", "모노톤 (흑백)": "monotone", "대비 강한 컬러": "high contrast colors",
+        "형광 네온": "neon tones", "모노톤 (흑백)": "monochrome", "대비 강한 컬러": "high-contrast colors",
         "브라운 계열": "brown tones", "연보라+회색": "lavender and gray",
         "다채로운 무지개": "rainbow colors", "연한 베이지": "light beige", "청록+골드": "teal and gold"
     }
+
     mood_dict = {
         "몽환적": "dreamy", "고요함": "calm", "희망": "hopeful", "슬픔": "sad", "그리움": "nostalgic",
         "설렘": "excited", "불안정함": "unstable", "자유로움": "free", "기대감": "anticipation",
@@ -75,6 +89,7 @@ def translate_to_prompt(style, tone, mood, viewpoint):
         "어두움": "dark", "차분함": "serene", "위로": "comforting", "용기": "brave",
         "무한함": "infinite", "즐거움": "joyful", "강렬함": "intense"
     }
+
     viewpoint_dict = {
         "정면": "front view", "항공 시점": "aerial view", "클로즈업": "close-up", "광각": "wide angle",
         "역광": "backlit", "뒷모습": "back view", "소프트 포커스": "soft focus", "하늘을 올려다보는 시점": "looking up"
@@ -88,6 +103,11 @@ def translate_to_prompt(style, tone, mood, viewpoint):
 
 # 옵션 불러오기
 options = get_options()
+
+# 🔄 예전 세션 값 때문에 스타일이 목록에 없어서 에러나는 경우 방지
+if "style" in st.session_state and st.session_state["style"] not in options["style"]:
+    st.session_state.pop("style", None)
+
 left_col, right_col = st.columns([1, 2])
 
 with left_col:
@@ -127,7 +147,7 @@ Viewpoint: ...
                         elif line.startswith("Color tone:"):
                             tone = line.split(":", 1)[1].strip()
                         elif line.startswith("Mood:"):
-                            mood = line.split(":", 1)[1].strip().split(",")
+                            mood = [m.strip() for m in line.split(":", 1)[1].split(",")]
                         elif line.startswith("Viewpoint:"):
                             viewpoint = line.split(":", 1)[1].strip()
 
@@ -189,8 +209,6 @@ with right_col:
             file_name="my_art_box.png",
             mime="image/png"
         )
-
-
 
 
 
