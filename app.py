@@ -47,8 +47,8 @@ def get_options():
             "정면", "항공 시점", "클로즈업", "광각", "역광",
             "뒷모습", "소프트 포커스", "하늘을 올려다보는 시점"
         ],
-        # 생성 지원: 1024x1024만, 1024x760은 후처리
-        "image_size": ["1024x1024", "1024x760"]
+        # ✅ DALL·E 3 지원 해상도만 표시
+        "image_size": ["1024x1024", "1024x1792 (세로형)", "1792x1024 (가로형)"]
     }
 
 # ✅ 번역 함수
@@ -214,63 +214,35 @@ with right_col:
         st.markdown(f"**📷 시점**: {st.session_state.get('viewpoint', '-')}")
         st.markdown(f"**🖼️ 이미지 크기**: {st.session_state.get('image_size', '-')}")
 
-        if st.button("🎨 이미지 생성하기"):
+                if st.button("🎨 이미지 생성하기"):
             with st.spinner("이미지 생성 중..."):
                 try:
-                    target_size = st.session_state["image_size"]
-                    # DALL·E 3 허용 사이즈로 변환
-                    if target_size == "1024x1024":
-                        gen_size = "1024x1024"
-                        postprocess_to_1024x760 = False
-                    elif target_size == "1024x760":
-                        # 생성은 1024x1024 → 이후 1024x760으로 크롭
-                        gen_size = "1024x1024"
-                        postprocess_to_1024x760 = True
+                    # 이미지 크기 선택 처리
+                    selected_size = st.session_state.get("image_size", "1024x1024")
+                    if "1024x1792" in selected_size:
+                        size_param = "1024x1792"
+                    elif "1792x1024" in selected_size:
+                        size_param = "1792x1024"
                     else:
-                        gen_size = "1024x1024"
-                        postprocess_to_1024x760 = False
+                        size_param = "1024x1024"
 
                     image_response = client.images.generate(
                         model="dall-e-3",
                         prompt=st.session_state["dalle_prompt"],
-                        size=gen_size,
+                        size=size_param,
                         n=1
                     )
                     image_url = image_response.data[0].url
-
-                    # 원본 이미지 바이트
-                    image_bytes = requests.get(image_url).content
-
-                    if postprocess_to_1024x760:
-                        # 중앙 크롭으로 1024x760 만들기
-                        img = Image.open(BytesIO(image_bytes)).convert("RGBA")
-                        img = center_crop_to(img, 1024, 760)
-                        buf = BytesIO()
-                        img.save(buf, format="PNG")
-                        buf.seek(0)
-                        st.image(buf, caption="🎉 생성된 이미지 (1024x760)")
-                        st.download_button(
-                            label="📥 이미지 다운로드 (1024x760)",
-                            data=buf.getvalue(),
-                            file_name="my_art_box_1024x760.png",
-                            mime="image/png"
-                        )
-                    else:
-                        st.image(image_bytes, caption="🎉 생성된 이미지 (1024x1024)")
-                        st.download_button(
-                            label="📥 이미지 다운로드 (1024x1024)",
-                            data=image_bytes,
-                            file_name="my_art_box_1024x1024.png",
-                            mime="image/png"
-                        )
-
-                    # URL도 세션에 저장(원본 접근 필요 시)
                     st.session_state["image_url"] = image_url
+
+                    image_bytes = requests.get(image_url).content
+                    st.image(image_bytes, caption=f"🎉 생성된 이미지 ({size_param})")
+                    st.download_button(
+                        label=f"📥 이미지 다운로드 ({size_param})",
+                        data=image_bytes,
+                        file_name=f"my_art_box_{size_param}.png",
+                        mime="image/png"
+                    )
                     st.success("✅ 이미지 생성 완료!")
                 except Exception as e:
                     st.error(f"❌ 에러: {e}")
-
-    # 기존 결과 표시 (선택)
-    if "image_url" in st.session_state and "dalle_prompt" in st.session_state:
-        st.markdown("##### 🔗 원본 이미지 URL")
-        st.write(st.session_state["image_url"])
