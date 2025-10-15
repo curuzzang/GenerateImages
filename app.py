@@ -4,35 +4,32 @@ from io import BytesIO
 from openai import OpenAI
 from datetime import datetime
 import pytz
-from PIL import Image  # ⬅ 후처리(리사이즈/크롭)용
 
-
-# ✅ 현재 시간 (KST)
+# =========================
+# 기본 환경 설정
+# =========================
 korea = pytz.timezone("Asia/Seoul")
 now = datetime.now(korea)
-
-# ✅ 마감 시각: 2025년 10월 16일 오후 8시 59분 59초
-cutoff_datetime = korea.localize(datetime(2025, 10, 16, 20, 59, 59))
+cutoff_datetime = korea.localize(datetime(2025, 8, 17, 15, 59, 59))
 
 if now > cutoff_datetime:
     st.error("⛔ 앱 사용시간이 종료되었습니다! 감사합니다💕")
     st.stop()
 
-# 초기 설정
 st.set_page_config(page_title="나의 그림상자 (Drawing Assistant)", layout="wide")
 st.title("🖼️ 나의 그림상자 - My AI Drawing-Box")
-# 🎨 버튼 색상 스타일 (연한 민트 + 굵은 글씨 완전 적용)
+
+# 🎨 버튼 색상 스타일 (연한 민트 + 굵은 글씨)
 st.markdown("""
 <style>
 div.stButton > button:first-child,
 div.stDownloadButton > button:first-child,
 div.stFormSubmitButton > button:first-child {
-    background-color: #A8E6CF !important;   /* 🌿 연한 민트 */
-    color: #004D40 !important;               /* 어두운 청록 글씨 */
-    font-weight: 900 !important;             /* 매우 굵게 */
-    font-family: "Noto Sans KR", "Pretendard", sans-serif !important; /* 한글 폰트 지정 */
-    letter-spacing: -0.3px !important;       /* 자간 살짝 좁게 */
-    font-size: 1.5rem !important;           /* 살짝 크게 */
+    background-color: #A8E6CF !important;   /* 연한 민트 */
+    color: #004D40 !important;              /* 진한 청록 글자색 */
+    font-family: "Noto Sans KR", "Pretendard", sans-serif !important;
+    font-weight: 900 !important;            /* 아주 굵게 */
+    font-size: 1.05rem !important;          /* 살짝 크게 */
     border: none !important;
     border-radius: 10px !important;
     padding: 0.6em 1.2em !important;
@@ -42,18 +39,19 @@ div.stFormSubmitButton > button:first-child {
 div.stButton > button:hover,
 div.stDownloadButton > button:hover,
 div.stFormSubmitButton > button:hover {
-    background-color: #C8F7E6 !important;    /* 🩵 hover 시 더 밝은 민트 */
+    background-color: #C8F7E6 !important;   /* hover 시 더 밝은 민트 */
     color: #002C25 !important;
     transform: scale(1.03);
 }
 </style>
 """, unsafe_allow_html=True)
 
-
 # OpenAI 클라이언트
 client = OpenAI(api_key=st.secrets["api_key"])
 
-# ✅ 선택 옵션
+# =========================
+# 옵션 & 번역
+# =========================
 def get_options():
     return {
         "style": [
@@ -76,11 +74,10 @@ def get_options():
             "정면", "항공 시점", "클로즈업", "광각", "역광",
             "뒷모습", "소프트 포커스", "하늘을 올려다보는 시점"
         ],
-        # ✅ DALL·E 3 지원 해상도만 표시
+        # DALL·E 3 공식 지원 해상도
         "image_size": ["1024x1024", "1024x1792 (세로형)", "1792x1024 (가로형)"]
     }
 
-# ✅ 번역 함수
 def translate_to_prompt(style, tone, mood, viewpoint):
     style_dict = {
         "스티커 스타일": "sticker style",
@@ -104,7 +101,6 @@ def translate_to_prompt(style, tone, mood, viewpoint):
         "포토몽타주": "photomontage style",
         "데콜라주": "décollage style with torn poster layers"
     }
-
     tone_dict = {
         "따뜻한 파스텔톤": "warm pastel tones", "선명한 원색": "vivid primary colors",
         "몽환적 퍼플": "dreamy purples", "차가운 블루": "cool blues", "빈티지 세피아": "vintage sepia",
@@ -112,7 +108,6 @@ def translate_to_prompt(style, tone, mood, viewpoint):
         "브라운 계열": "brown tones", "연보라+회색": "lavender and gray",
         "다채로운 무지개": "rainbow colors", "연한 베이지": "light beige", "청록+골드": "teal and gold"
     }
-
     mood_dict = {
         "몽환적": "dreamy", "고요함": "calm", "희망": "hopeful", "슬픔": "sad", "그리움": "nostalgic",
         "설렘": "excited", "불안정함": "unstable", "자유로움": "free", "기대감": "anticipation",
@@ -120,7 +115,6 @@ def translate_to_prompt(style, tone, mood, viewpoint):
         "어두움": "dark", "차분함": "serene", "위로": "comforting", "용기": "brave",
         "무한함": "infinite", "즐거움": "joyful", "강렬함": "intense"
     }
-
     viewpoint_dict = {
         "정면": "front view", "항공 시점": "aerial view", "클로즈업": "close-up", "광각": "wide angle",
         "역광": "backlit", "뒷모습": "back view", "소프트 포커스": "soft focus", "하늘을 올려다보는 시점": "looking up"
@@ -132,32 +126,16 @@ def translate_to_prompt(style, tone, mood, viewpoint):
     viewpoint_eng = viewpoint_dict.get(viewpoint, viewpoint)
     return style_eng, tone_eng, mood_eng, viewpoint_eng
 
-# 유틸: 중앙 크롭으로 원하는 비율 만들기
-def center_crop_to(img: Image.Image, target_w: int, target_h: int) -> Image.Image:
-    w, h = img.size
-    target_ratio = target_w / target_h
-    src_ratio = w / h
-
-    if src_ratio > target_ratio:
-        # 원본이 더 가로로 넓음 → 가로를 잘라냄
-        new_w = int(h * target_ratio)
-        left = (w - new_w) // 2
-        box = (left, 0, left + new_w, h)
-        img = img.crop(box)
-    else:
-        # 원본이 더 세로로 큼 → 세로를 잘라냄
-        new_h = int(w / target_ratio)
-        top = (h - new_h) // 2
-        box = (0, top, w, top + new_h)
-        img = img.crop(box)
-
-    return img.resize((target_w, target_h), Image.LANCZOS)
-
-# ✅ 인터페이스
+# =========================
+# UI & 상태 기본값
+# =========================
 options = get_options()
-
-# 세션 기본값 초기화 (KeyError 방지)
+# 이미지 관련 세션 기본값(KeyError 방지)
 st.session_state.setdefault("image_size", options["image_size"][0])
+st.session_state.setdefault("image_bytes", None)
+st.session_state.setdefault("image_url", None)
+st.session_state.setdefault("image_size_param", "1024x1024")
+st.session_state.setdefault("image_filename", "my_art_box_1024x1024.png")
 
 left_col, right_col = st.columns([1, 2])
 
@@ -171,14 +149,18 @@ with left_col:
         tone = st.selectbox("🎨 색상 톤", options["tone"])
         mood = st.multiselect("💫 감정 / 분위기", options["mood"], default=["몽환적"])
         viewpoint = st.selectbox("📷 시점 / 구도", options["viewpoint"])
-        image_size = st.selectbox("🖼️ 이미지 크기", options["image_size"], index=options["image_size"].index(st.session_state["image_size"]))
+        image_size = st.selectbox(
+            "🖼️ 이미지 크기",
+            options["image_size"],
+            index=options["image_size"].index(st.session_state["image_size"])
+        )
         submitted = st.form_submit_button("✨ 프롬프트 생성")
 
     if submitted:
         with st.spinner("프롬프트 생성 중..."):
             try:
-                # 🔹 색상 톤 자동 추천 또는 전체 자동 추천
-                if tone == use_ai:
+                # 사용자가 AI 추천 체크 시 스타일/톤/분위기/시점 제안 받기
+                if use_ai:
                     instruction = f"""
 You are a creative assistant. Based on the theme, suggest:
 Style, Color tone, Mood(s), and Viewpoint (in Korean).
@@ -246,7 +228,7 @@ with right_col:
         if st.button("🎨 이미지 생성하기"):
             with st.spinner("이미지 생성 중..."):
                 try:
-                    # 이미지 크기 선택 처리
+                    # 이미지 크기 문자열 파싱 → DALL·E 3 파라미터로 변환
                     selected_size = st.session_state.get("image_size", "1024x1024")
                     if "1024x1792" in selected_size:
                         size_param = "1024x1792"
@@ -262,22 +244,31 @@ with right_col:
                         n=1
                     )
                     image_url = image_response.data[0].url
-                    st.session_state["image_url"] = image_url
-
                     image_bytes = requests.get(image_url).content
-                    st.image(image_bytes, caption=f"🎉 생성된 이미지 ({size_param})")
-                    st.download_button(
-                        label=f"📥 이미지 다운로드 ({size_param})",
-                        data=image_bytes,
-                        file_name=f"my_art_box_{size_param}.png",
-                        mime="image/png"
-                    )
+
+                    # ✅ 세션에 저장 → rerun 후에도 계속 화면에 유지
+                    st.session_state["image_url"] = image_url
+                    st.session_state["image_bytes"] = image_bytes
+                    st.session_state["image_size_param"] = size_param
+                    st.session_state["image_filename"] = f"my_art_box_{size_param}.png"
+
                     st.success("✅ 이미지 생성 완료!")
                 except Exception as e:
                     st.error(f"❌ 에러: {e}")
 
-
-
+    # ✅ 생성된 이미지가 있으면 항상 표기 + 다운로드 버튼 유지
+    if st.session_state.get("image_bytes"):
+        st.image(
+            st.session_state["image_bytes"],
+            caption=f"🎉 생성된 이미지 ({st.session_state.get('image_size_param', '1024x1024')})"
+        )
+        st.download_button(
+            label=f"📥 이미지 다운로드 ({st.session_state.get('image_size_param', '1024x1024')})",
+            data=st.session_state["image_bytes"],
+            file_name=st.session_state.get("image_filename", "my_art_box.png"),
+            mime="image/png",
+            key="download_latest"  # rerun에도 안정적으로 유지
+        )
 
 
 
