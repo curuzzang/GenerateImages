@@ -214,7 +214,7 @@ with right_col:
         st.markdown(f"**📷 시점**: {st.session_state.get('viewpoint', '-')}")
         st.markdown(f"**🖼️ 이미지 크기**: {st.session_state.get('image_size', '-')}")
 
-                if st.button("🎨 이미지 생성하기"):
+            if st.button("🎨 이미지 생성하기"):
             with st.spinner("이미지 생성 중..."):
                 try:
                     # 이미지 크기 선택 처리
@@ -246,3 +246,4 @@ with right_col:
                     st.success("✅ 이미지 생성 완료!")
                 except Exception as e:
                     st.error(f"❌ 에러: {e}")
+
