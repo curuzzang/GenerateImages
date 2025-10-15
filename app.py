@@ -9,8 +9,8 @@ import pytz
 korea = pytz.timezone("Asia/Seoul")
 now = datetime.now(korea)
 
-# ✅ 마감 시각: 2025년 8월 17일 오후 3시 59분 59초
-cutoff_datetime = korea.localize(datetime(2025, 8, 17, 15, 59, 59))
+# ✅ 마감 시각: 2025년 10월 16일 오후 8시 59분 59초
+cutoff_datetime = korea.localize(datetime(2025, 10, 16, 20, 59, 59))
 
 # ✅ 제한 조건
 if now > cutoff_datetime:
@@ -209,6 +209,7 @@ with right_col:
             file_name="my_art_box.png",
             mime="image/png"
         )
+
 
 
 
