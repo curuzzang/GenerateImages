@@ -136,7 +136,7 @@ with left:
     size = st.selectbox("🖼️ 이미지 크기", options["image_size"])
 
     # 수동 생성 버튼
-    if st.button("✨ 수동으로 이미지 생성하기"):
+    if st.button("✨ 이미지 생성하기"):
         with st.spinner("이미지 생성 중..."):
             try:
                 prompt = f"A {tone} {style} artwork showing {theme}, expressing {', '.join(mood)} mood, viewed from {viewpoint}."
@@ -162,6 +162,7 @@ with right:
             mime="image/png"
         )
         st.markdown(f"📝 **프롬프트:** {st.session_state['dalle_prompt']}")
+
 
 
 
