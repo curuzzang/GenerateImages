@@ -4,6 +4,7 @@ from io import BytesIO
 from openai import OpenAI
 from datetime import datetime
 from streamlit_mic_recorder import mic_recorder
+from pydub import AudioSegment
 import pytz
 
 # =========================
@@ -26,8 +27,7 @@ st.title("🖼️ 나의 그림상자 - My AI Drawing-Box")
 st.markdown("""
 <style>
 div.stButton > button:first-child,
-div.stDownloadButton > button:first-child,
-div.stFormSubmitButton > button:first-child {
+div.stDownloadButton > button:first-child {
     background-color: #A8E6CF !important;
     color: #004D40 !important;
     font-weight: 900 !important;
@@ -63,7 +63,7 @@ def get_options():
 options = get_options()
 
 # =========================
-# Whisper 음성 입력 + 주제 자동 반영
+# 🎙️ 음성 입력 + Whisper 변환
 # =========================
 st.markdown("### 🎙️ 음성으로 주제 입력하기 (선택사항)")
 audio_data = mic_recorder(
@@ -80,10 +80,17 @@ theme_text = ""
 if audio_data and "bytes" in audio_data:
     with st.spinner("🎧 음성 인식 중..."):
         try:
+            # 🔄 WebM → WAV 변환
             audio_bytes = audio_data["bytes"]
+            webm_audio = AudioSegment.from_file(BytesIO(audio_bytes), format="webm")
+            wav_buffer = BytesIO()
+            webm_audio.export(wav_buffer, format="wav")
+            wav_buffer.seek(0)
+
+            # 🎧 Whisper API 호출
             transcript = client.audio.transcriptions.create(
                 model="gpt-4o-mini-transcribe",
-                file=BytesIO(audio_bytes)
+                file=wav_buffer
             )
             theme_text = transcript.text.strip()
             st.success(f"🎙️ 인식된 주제: {theme_text}")
@@ -91,7 +98,7 @@ if audio_data and "bytes" in audio_data:
             st.error(f"❌ Whisper 인식 실패: {e}")
 
 # =========================
-# 주제 및 프롬프트 UI
+# 주제 입력 및 선택
 # =========================
 st.markdown("### 🎨 주제 입력 또는 수정")
 theme = st.text_input("🎯 주제", value=theme_text, placeholder="예: 꿈속을 걷는 느낌")
@@ -103,25 +110,65 @@ mood = st.multiselect("💫 감정 / 분위기", options["mood"], default=["몽�
 viewpoint = st.selectbox("📷 시점 / 구도", options["viewpoint"])
 image_size = st.selectbox("🖼️ 이미지 크기", options["image_size"])
 
+# =========================
+# 프롬프트 생성
+# =========================
 if st.button("✨ 프롬프트 생성"):
     if not theme.strip():
         st.warning("주제를 입력하거나 음성으로 인식시켜주세요!")
     else:
         with st.spinner("🧠 프롬프트 생성 중..."):
             try:
-                final_prompt = f"Create a detailed DALL·E 3 prompt about '{theme}' in {style}, {tone}, {', '.join(mood)}, {viewpoint} view."
-                st.session_state["dalle_prompt"] = final_prompt
+                if use_ai:
+                    instruction = f"""
+You are a creative assistant. Based on the theme, suggest:
+Style, Color tone, Mood(s), and Viewpoint (in Korean).
+Theme: {theme}
+Format:
+Style: ...
+Color tone: ...
+Mood: ...
+Viewpoint: ...
+"""
+                    ai_response = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[{"role": "user", "content": instruction}]
+                    )
+                    response_text = ai_response.choices[0].message.content.strip()
+                    for line in response_text.splitlines():
+                        if line.startswith("Style:"):
+                            style = line.split(":", 1)[1].strip()
+                        elif line.startswith("Color tone:"):
+                            tone = line.split(":", 1)[1].strip()
+                        elif line.startswith("Mood:"):
+                            mood = [m.strip() for m in line.split(":", 1)[1].split(",")]
+                        elif line.startswith("Viewpoint:"):
+                            viewpoint = line.split(":", 1)[1].strip()
+
+                final_prompt = f"""
+Create a vivid English image prompt for DALL·E 3.
+Theme: {theme}
+Style: {style}
+Color tone: {tone}
+Mood: {', '.join(mood)}
+Viewpoint: {viewpoint}
+Only return the prompt.
+"""
+                prompt_response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": final_prompt}]
+                )
+                dalle_prompt = prompt_response.choices[0].message.content.strip()[:1000]
+                st.session_state["dalle_prompt"] = dalle_prompt
                 st.success("✅ 프롬프트 생성 완료!")
+                st.code(dalle_prompt)
             except Exception as e:
-                st.error(f"❌ 에러: {e}")
+                st.error(f"❌ 프롬프트 생성 실패: {e}")
 
 # =========================
-# 이미지 생성
+# DALL·E 이미지 생성
 # =========================
 if st.session_state.get("dalle_prompt"):
-    st.markdown("### 📝 생성된 프롬프트")
-    st.code(st.session_state["dalle_prompt"])
-
     if st.button("🎨 이미지 생성하기"):
         with st.spinner("🖼️ DALL·E 이미지 생성 중..."):
             try:
@@ -137,6 +184,7 @@ if st.session_state.get("dalle_prompt"):
                 st.session_state["image_bytes"] = image_bytes
                 st.session_state["image_filename"] = f"my_art_box_{size_param}.png"
                 st.image(image_bytes, caption="🎉 생성된 이미지")
+                st.success("✅ 이미지 생성 완료!")
             except Exception as e:
                 st.error(f"❌ 이미지 생성 실패: {e}")
 
