@@ -168,8 +168,6 @@ if audio_text and "transcript" in audio_text:
     theme = audio_text["transcript"]
 else:
     theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
-
-        theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
         use_ai = st.checkbox(" AI가 시각 요소 자동 추천", value=True)
         style = st.selectbox("🎨 스타일", options["style"])
         tone = st.selectbox("🎨 색상 톤", options["tone"])
@@ -262,5 +260,6 @@ with right_col:
             mime="image/png",
             key="download_latest"
         )
+
 
 
