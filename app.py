@@ -153,14 +153,14 @@ with left_col:
     st.subheader("🎨 주제를 입력하고 직접 고르거나 AI 추천을 받아보세요")
     with st.form("input_form"):
         # 🎤 음성 입력 기능 추가
-st.markdown("🎙️ **음성으로 주제 입력하기 (선택사항)**")
-audio_text = mic_recorder(
-    start_prompt="🎤 녹음 시작",
-    stop_prompt="🛑 녹음 종료",
-    just_once=False,          # 한 번만 녹음할지 여부
-    use_container_width=True, # 버튼 너비 맞춤
-    callback=None,            # 실시간 인식은 비활성
-    key="voice_input"
+        st.markdown("🎙️ **음성으로 주제 입력하기 (선택사항)**")
+        audio_text = mic_recorder(
+            start_prompt="🎤 녹음 시작",
+            stop_prompt="🛑 녹음 종료",
+            just_once=False,          # 한 번만 녹음할지 여부
+            use_container_width=True, # 버튼 너비 맞춤
+            callback=None,            # 실시간 인식은 비활성
+            key="voice_input"
 )
 
 # 텍스트 입력과 병행 — 음성이 입력되면 자동 채우기
@@ -262,4 +262,5 @@ with right_col:
             mime="image/png",
             key="download_latest"
         )
+
 
