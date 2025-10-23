@@ -3,6 +3,7 @@ import requests
 from io import BytesIO
 from openai import OpenAI
 from datetime import datetime
+from streamlit_mic_recorder import mic_recorder
 import pytz
 
 # =========================
@@ -151,6 +152,23 @@ left_col, right_col = st.columns([1, 2])
 with left_col:
     st.subheader("🎨 주제를 입력하고 직접 고르거나 AI 추천을 받아보세요")
     with st.form("input_form"):
+        # 🎤 음성 입력 기능 추가
+st.markdown("🎙️ **음성으로 주제 입력하기 (선택사항)**")
+audio_text = mic_recorder(
+    start_prompt="🎤 녹음 시작",
+    stop_prompt="🛑 녹음 종료",
+    just_once=False,          # 한 번만 녹음할지 여부
+    use_container_width=True, # 버튼 너비 맞춤
+    callback=None,            # 실시간 인식은 비활성
+    key="voice_input"
+)
+
+# 텍스트 입력과 병행 — 음성이 입력되면 자동 채우기
+if audio_text and "transcript" in audio_text:
+    theme = audio_text["transcript"]
+else:
+    theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
+
         theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
         use_ai = st.checkbox(" AI가 시각 요소 자동 추천", value=True)
         style = st.selectbox("🎨 스타일", options["style"])
@@ -244,3 +262,4 @@ with right_col:
             mime="image/png",
             key="download_latest"
         )
+
