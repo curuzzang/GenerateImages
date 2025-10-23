@@ -149,26 +149,37 @@ left_col, right_col = st.columns([1, 2])
 # 왼쪽: 프롬프트 생성 UI
 # =========================
 with left_col:
-    st.subheader("🎨 주제를 입력하고 직접 고르거나 AI 추천을 받아보세요")
+    st.subheader("🎨 상상한 것을 그림으로 그려보세요!")
     with st.form("input_form"):
-        # 🎤 음성 입력 기능 추가
         st.markdown("🎙️ **음성으로 주제 입력하기 (선택사항)**")
-        audio_text = mic_recorder(
+        audio_data = mic_recorder(
             start_prompt="🎤 녹음 시작",
             stop_prompt="🛑 녹음 종료",
-            just_once=False,
+            just_once=True,
             use_container_width=True,
             callback=None,
             key="voice_input"
         )
 
-        # 텍스트 입력과 병행 — 음성이 입력되면 자동 채우기
-        if audio_text and "transcript" in audio_text:
-            theme = audio_text["transcript"]
+        # Whisper로 텍스트 변환
+        if audio_data and isinstance(audio_data, dict) and "bytes" in audio_data:
+            with st.spinner("🎧 음성 인식 중..."):
+                try:
+                    audio_bytes = audio_data["bytes"]
+                    transcript = client.audio.transcriptions.create(
+                        model="gpt-4o-mini-transcribe",
+                        file=BytesIO(audio_bytes)
+                    )
+                    recognized_text = transcript.text.strip()
+                    st.success(f"🎙️ 인식된 주제: {recognized_text}")
+                    theme = recognized_text
+                except Exception as e:
+                    st.error(f"❌ 음성 인식 실패: {e}")
+                    theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
         else:
             theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
 
-        use_ai = st.checkbox(" AI가 시각 요소 자동 추천", value=True)
+        use_ai = st.checkbox("AI가 시각 요소 자동 추천", value=True)
         style = st.selectbox("🎨 스타일", options["style"])
         tone = st.selectbox("🎨 색상 톤", options["tone"])
         mood = st.multiselect("💫 감정 / 분위기", options["mood"], default=["몽환적"])
