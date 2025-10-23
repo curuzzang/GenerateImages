@@ -78,7 +78,7 @@ if "image_bytes" not in st.session_state:
 # =========================
 left, right = st.columns([1, 2])
 with left:
-    st.subheader("🎨 주제 입력 또는 음성 인식")
+    st.subheader("🎨 상상하는 것을 그림으로 그려요!")
 
     # 🎙️ 음성 녹음
     st.markdown("🎙️ **음성으로 주제 입력하기 (선택사항)**")
@@ -162,5 +162,6 @@ with right:
             mime="image/png"
         )
         st.markdown(f"📝 **프롬프트:** {st.session_state['dalle_prompt']}")
+
 
 
