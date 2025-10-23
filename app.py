@@ -28,11 +28,11 @@ st.markdown("""
 div.stButton > button:first-child,
 div.stDownloadButton > button:first-child,
 div.stFormSubmitButton > button:first-child {
-    background-color: #A8E6CF !important;   /* 연한 민트 */
-    color: #004D40 !important;              /* 진한 청록 글자색 */
+    background-color: #A8E6CF !important;
+    color: #004D40 !important;
     font-family: "Noto Sans KR", "Pretendard", sans-serif !important;
-    font-weight: 900 !important;            /* 굵게 */
-    font-size: 1.05rem !important;          /* 살짝 크게 */
+    font-weight: 900 !important;
+    font-size: 1.05rem !important;
     border: none !important;
     border-radius: 10px !important;
     padding: 0.6em 1.2em !important;
@@ -42,7 +42,7 @@ div.stFormSubmitButton > button:first-child {
 div.stButton > button:hover,
 div.stDownloadButton > button:hover,
 div.stFormSubmitButton > button:hover {
-    background-color: #C8F7E6 !important;   /* hover 시 더 밝은 민트 */
+    background-color: #C8F7E6 !important;
     color: #002C25 !important;
     transform: scale(1.03);
 }
@@ -79,7 +79,6 @@ def get_options():
             "정면", "항공 시점", "클로즈업", "광각", "역광",
             "뒷모습", "소프트 포커스", "하늘을 올려다보는 시점"
         ],
-        # DALL·E 3 지원 해상도
         "image_size": ["1024x1024", "1024x1792 (세로형)", "1792x1024 (가로형)"]
     }
 
@@ -157,17 +156,18 @@ with left_col:
         audio_text = mic_recorder(
             start_prompt="🎤 녹음 시작",
             stop_prompt="🛑 녹음 종료",
-            just_once=False,          # 한 번만 녹음할지 여부
-            use_container_width=True, # 버튼 너비 맞춤
-            callback=None,            # 실시간 인식은 비활성
+            just_once=False,
+            use_container_width=True,
+            callback=None,
             key="voice_input"
-)
+        )
 
-# 텍스트 입력과 병행 — 음성이 입력되면 자동 채우기
-if audio_text and "transcript" in audio_text:
-    theme = audio_text["transcript"]
-else:
-    theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
+        # 텍스트 입력과 병행 — 음성이 입력되면 자동 채우기
+        if audio_text and "transcript" in audio_text:
+            theme = audio_text["transcript"]
+        else:
+            theme = st.text_input("🎯 주제", placeholder="예: 꿈속을 걷는 느낌")
+
         use_ai = st.checkbox(" AI가 시각 요소 자동 추천", value=True)
         style = st.selectbox("🎨 스타일", options["style"])
         tone = st.selectbox("🎨 색상 톤", options["tone"])
@@ -260,6 +260,3 @@ with right_col:
             mime="image/png",
             key="download_latest"
         )
-
-
-
