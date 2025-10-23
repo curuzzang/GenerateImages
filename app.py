@@ -154,7 +154,7 @@ with left:
 # =========================
 with right:
     if st.session_state.get("image_bytes"):
-        st.image(st.session_state["image_bytes"], caption="🎨 생성된 이미지", use_column_width=True)
+        st.image(st.session_state["image_bytes"], caption="🎨 생성된 이미지", use_container_width=True)
         st.download_button(
             label="📥 이미지 다운로드",
             data=st.session_state["image_bytes"],
@@ -162,6 +162,7 @@ with right:
             mime="image/png"
         )
         st.markdown(f"📝 **프롬프트:** {st.session_state['dalle_prompt']}")
+
 
 
 
