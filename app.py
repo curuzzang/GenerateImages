@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # =========================
 korea = pytz.timezone("Asia/Seoul")
 now = datetime.now(korea)
-cutoff_datetime = korea.localize(datetime(2025, 10, 31, 23, 59, 59))
+cutoff_datetime = korea.localize(datetime(2026, 1, 21, 21, 29, 59))
 
 if now > cutoff_datetime:
     st.error("⛔ 앱 사용시간이 종료되었습니다! 감사합니다💕")
@@ -184,5 +184,6 @@ with right:
             mime="image/png"
         )
         st.markdown(f"📝 **프롬프트:** {st.session_state['dalle_prompt']}")
+
 
 
